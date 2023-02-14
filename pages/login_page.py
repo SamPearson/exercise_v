@@ -27,11 +27,12 @@ class LoginPage(BasePage):
         self._type(self._username_field, username)
         self._type(self._password_field, password)
         self._click(self._login_button)
-        # Logging in can take a long time.
+        # Logging in can take an extremely long time.
         # We wait up to 2 seconds for a login progress indicator to appear,
-        # then up to 10 more seconds for it to disappear
+        # then up to 30 more seconds for it to disappear
         if self._is_displayed(self._login_progress_indicator, 2):
-            self._wait_until_element_gone(self._login_progress_indicator)
+            self._wait_until_element_gone(self._login_progress_indicator, 30)
 
     def login_error_message(self):
+        self._is_displayed(self._login_error,2)
         return self._find(self._login_error).text
