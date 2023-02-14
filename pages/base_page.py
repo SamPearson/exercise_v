@@ -5,6 +5,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 from tests import config
 
 
+class ElementStillPresentException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
 class BasePage:
     def __init__(self, driver):
         self.driver = driver
@@ -52,24 +57,18 @@ class BasePage:
                 return False
             return True
         else:
-            e = self._find(locator)
-            if e:
-                return e.is_displayed()
-            else:
+            try:
+                return self._find(locator).is_displayed()
+            except NoSuchElementException:
                 return False
 
     def _wait_until_element_gone(self, locator, timeout=10):
-        if timeout > 0:
-            try:
-                wait = WebDriverWait(self.driver, timeout)
-                wait.until(
-                    expected_conditions.invisibility_of_element_located(
-                        (locator['by'], locator['value'])))
-            except TimeoutException:
-                return False
-            return True
-        else:
-            if not self._is_displayed(locator):
-                return True
-            else:
-                return False
+        try:
+            wait = WebDriverWait(self.driver, timeout)
+            wait.until(
+                expected_conditions.invisibility_of_element_located(
+                    (locator['by'], locator['value'])))
+        except TimeoutException:
+            raise ElementStillPresentException(f'Waited for element to disappear but timed out after {timeout} seconds.'
+                                               f' - Using locator {locator}')
+
