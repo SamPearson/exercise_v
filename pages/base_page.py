@@ -5,6 +5,11 @@ from selenium.webdriver.support.wait import WebDriverWait
 from tests import config
 
 
+class ElementStillPresentException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
 class BasePage:
     def __init__(self, driver):
         self.driver = driver
@@ -16,34 +21,26 @@ class BasePage:
             self.driver.get(config.baseurl + url)
 
     def _find(self, locator):
-        try:
-            return self._find_all(locator)[0]
-        except IndexError:
-            return False
-
-    def _find_child(self, parent, locator):
-        children = parent.find_elements(locator["by"], locator["value"])
-        try:
-            return children[0]
-        except IndexError:
-            return False
+        return self.driver.find_element(locator["by"], locator["value"])
 
     def _find_children(self, parent, locator):
         children = parent.find_elements(locator["by"], locator["value"])
-        try:
+        if children:
             return children
-        except IndexError:
-            return False
+        else:
+            raise NoSuchElementException(f"No child elements were found with the locator {locator}")
+
+    def _find_child(self, parent, locator):
+        return self._find_children(parent, locator)[0]
 
     def _find_all(self, locator):
-        try:
-            return self.driver.find_elements(locator["by"], locator["value"])
-        except NoSuchElementException:
-            return False
+        elements = self.driver.find_elements(locator["by"], locator["value"])
+        if elements:
+            return elements
+        else:
+            raise NoSuchElementException(f"No elements were found with the locator {locator}")
 
     def _click(self, locator):
-        element = self._find(locator)
-        assert element, f"Click action failed, cannot locate an element with {locator}"
         self._find(locator).click()
 
     def _type(self, locator, input_text):
@@ -60,8 +57,18 @@ class BasePage:
                 return False
             return True
         else:
-            e = self._find(locator)
-            if e:
-                return e.is_displayed()
-            else:
+            try:
+                return self._find(locator).is_displayed()
+            except NoSuchElementException:
                 return False
+
+    def _wait_until_element_gone(self, locator, timeout=10):
+        try:
+            wait = WebDriverWait(self.driver, timeout)
+            wait.until(
+                expected_conditions.invisibility_of_element_located(
+                    (locator['by'], locator['value'])))
+        except TimeoutException:
+            raise ElementStillPresentException(f'Waited for element to disappear but timed out after {timeout} seconds.'
+                                               f' - Using locator {locator}')
+
