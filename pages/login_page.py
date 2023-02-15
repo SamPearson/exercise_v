@@ -1,5 +1,7 @@
 from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
+from dotenv import load_dotenv
+import os
 
 
 class LoginPage(BasePage):
@@ -9,21 +11,20 @@ class LoginPage(BasePage):
     _login_button = {"by": By.XPATH, "value": "//button[@data-test-login='true']"}
     _login_progress_indicator = {"by": By.XPATH,
                                  "value": "//button[@data-test-login='true']/span[contains(@class, 'login-loader')]"}
-
     _login_error = {"by": By.XPATH, "value": "//div[@data-test-noaccesserror='true']"}
 
     def __init__(self, driver):
         self.driver = driver
         self._visit("/#/login")
+        assert self._is_displayed(self._login_form, 5), "Could not find login form, may not be at the login page"
 
     def verify_elements_present(self):
-        assert self._is_displayed(self._login_form, 5), "Could not find login form"
+        assert self._is_displayed(self._login_form), "Could not find login form"
         assert self._is_displayed(self._username_field), "Could not find username field"
         assert self._is_displayed(self._password_field), "Could not find password field"
         assert self._is_displayed(self._login_button), "Could not find login button"
 
     def log_in(self, username, password):
-        assert self._is_displayed(self._login_form, 5), "Could not find login form"
         self._type(self._username_field, username)
         self._type(self._password_field, password)
         self._click(self._login_button)
@@ -36,3 +37,9 @@ class LoginPage(BasePage):
     def login_error_message(self):
         self._is_displayed(self._login_error,2)
         return self._find(self._login_error).text
+
+    def env_file_login(self):
+        load_dotenv()
+        user = os.environ.get('default_user')
+        password = os.environ.get('default_password')
+        self.log_in(user,password)
