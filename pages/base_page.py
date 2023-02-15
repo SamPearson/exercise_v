@@ -12,6 +12,8 @@ class ElementStillPresentException(Exception):
 
 class BasePage:
     def __init__(self, driver):
+        # Child pages will probably overwrite this method
+        # but if they don't need to, they still need a driver.
         self.driver = driver
 
     def _visit(self, url):
@@ -47,6 +49,7 @@ class BasePage:
         self._find(locator).send_keys(input_text)
 
     def _is_displayed(self, locator, timeout=0):
+        """Tests whether an element is present, visible, and interactive"""
         if timeout > 0:
             try:
                 wait = WebDriverWait(self.driver, timeout)
@@ -59,6 +62,23 @@ class BasePage:
         else:
             try:
                 return self._find(locator).is_displayed()
+            except NoSuchElementException:
+                return False
+
+    def _is_present(self, locator, timeout=0):
+        """Tests whether an element is present, whether visible/interactive or not"""
+        if timeout > 0:
+            try:
+                wait = WebDriverWait(self.driver, timeout)
+                wait.until(
+                    expected_conditions.presence_of_element_located(
+                        (locator['by'], locator['value'])))
+            except TimeoutException:
+                return False
+            return True
+        else:
+            try:
+                return self._find(locator).is_present()
             except NoSuchElementException:
                 return False
 
