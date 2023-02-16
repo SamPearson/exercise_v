@@ -10,13 +10,17 @@ class ClientDashboardPage(BasePage):
         self.driver = driver
 
         self._client_action_menu = {"by": By.XPATH, "value": "//a[@data-test-clientactions ='true']"}
-        # self._add_button
-        # self._add_button_menu
-        # self._add_goal_button
-        # self._add_income_button
-        # self._add_insurance_button
+        self._add_button = {"by": By.XPATH, "value": "//a[@data-test-add-button ='true']"}
+        self._add_button_menu = {"by": By.CLASS_NAME, "value": "add-button-menu"}
+
+        self._add_goal_button = {"by": By.XPATH, "value": "//button[@data-test-model-type ='goals']"}
+        self._add_income_button = {"by": By.XPATH, "value": "//button[@data-test-model-type ='income']"}
+        self._add_insurance_button = {"by": By.XPATH, "value": "//button[@data-test-model-type ='protection']"}
 
         assert self._is_displayed(self._client_action_menu, 5)
         assert self._find(self._client_action_menu).text == name['last'] + ", " + name['first']
 
+    def _open_add_menu(self):
+        if not self._is_displayed(self._add_button_menu):
+            self._click(self._add_button)
 
