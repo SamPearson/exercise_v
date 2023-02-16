@@ -23,9 +23,11 @@ class BasePage:
             self.driver.get(config.baseurl + url)
 
     def _find(self, locator):
+        assert self._is_displayed(locator, 2), f"Attempted to find element with the locator {locator}, but could not"
         return self.driver.find_element(locator["by"], locator["value"])
 
     def _find_children(self, parent, locator):
+        assert self._is_displayed(locator, 2), f"Attempted to find child elements with the locator {locator}, but could not"
         children = parent.find_elements(locator["by"], locator["value"])
         if children:
             return children
@@ -33,9 +35,11 @@ class BasePage:
             raise NoSuchElementException(f"No child elements were found with the locator {locator}")
 
     def _find_child(self, parent, locator):
+        assert self._is_displayed(locator, 2), f"Attempted to find child element with the locator {locator}, but could not"
         return self._find_children(parent, locator)[0]
 
     def _find_all(self, locator):
+        assert self._is_displayed(locator, 2), f"Attempted to find elements with the locator {locator}, but could not"
         elements = self.driver.find_elements(locator["by"], locator["value"])
         if elements:
             return elements
